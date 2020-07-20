@@ -56,6 +56,7 @@ export class SceneGame extends Phaser.Scene {
         this.addHud();
         this.setupHud();
         this.updateHud();
+        this.setupGroundColliders();
     }
 
     update(time: number): void {
@@ -80,6 +81,33 @@ export class SceneGame extends Phaser.Scene {
             new Phaser.Geom.Line(32, 768, 632, 768));
 
         this.ground.refresh();
+    }
+
+    setupGroundColliders(): void {
+        this.physics.add.collider(this.ground, this.goodCookieGroup, this.onDroppedGoodCookie, null, this);
+        this.physics.add.collider(this.ground, this.badCookieGroup, this.onDroppedBadCookie, null, this);
+    }
+
+    onDroppedGoodCookie(ground: Phaser.GameObjects.Image, cookie: Cookie): void {
+            this.cookiesDropped++;
+            this.updateHud();
+            cookie.enabled = false;
+            cookie.setTint(0xff0000);
+            this.time.delayedCall(100, () => {
+                cookie.destroy();
+            });
+    }
+
+    onDroppedBadCookie(ground: Phaser.GameObjects.Image, cookie: Cookie): void {
+        cookie.enabled = false;
+        cookie.setAlpha(0.4);
+        this.time.delayedCall(100, () => {
+            cookie.destroy();
+        });
+    }
+
+    setupPlayerColliders(): void {
+
     }
 
     addHud(): void {
