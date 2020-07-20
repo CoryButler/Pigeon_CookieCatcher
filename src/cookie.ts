@@ -20,7 +20,6 @@ export class Cookie extends Phaser.Physics.Arcade.Image {
 
         this.enabled = true;
         this.setDepth(-1);
-        this.setDisplaySize(64, 64);
         this.setVelocity(0, 100);
         this.setAngle(Phaser.Math.Between(0, 360));
     }
