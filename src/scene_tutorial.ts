@@ -2,9 +2,6 @@ import "phaser";
 
 export class SceneTutorial extends Phaser.Scene {
     characterKey: string;
-    badCookieKey: string;
-    goodCookieKey: string;
-    player: Phaser.Physics.Arcade.Image;
 
     constructor() {
         super({
@@ -14,77 +11,52 @@ export class SceneTutorial extends Phaser.Scene {
 
     init(params: any) {
         this.characterKey = params.characterKey;
-        this.goodCookieKey = this.characterKey === "pigeon" ? "cookie_nuts" : "cookie";
-        this.badCookieKey = this.characterKey === "pigeon" ? "cookie" : "cookie_nuts";
     }
 
     preload(): void {
-        this.load.image("cookie", "assets/cookie.png");
-        this.load.image("cookie_nuts", "assets/cookie_nuts.png");
-        this.load.image("hotdog", "assets/hotdog.png");
-        this.load.image("duckling", "assets/duckling_player.png");
-        this.load.image("pigeon", "assets/pigeon_player.png");
+        this.load.image("duckling_tutorial", "assets/duckling_tutorial.png");
+        this.load.image("pigeon_tutorial", "assets/pigeon_tutorial.png");
+        this.load.image("startButton", "assets/startButton.png");
     }
 
     create(): void {
-        this.addText();
-        this.addIcons();
-        this.addPlayer();
+        this.addTutorialImage();
+        this.addTutorialText();
+        this.addStartButton();
     }
 
-    addText(): void {
-        this.add.text(
-            96, 64, `catch these >`,
-            { font: "32px Courier, Monospace Bold", fill: "#FBFBAC" })
-            .setOrigin(0, 0.5);
-        this.add.text(
-            96, 160, `avoid these >`,
-            { font: "32px Courier, Monospace Bold", fill: "#FBFBAC" })
-            .setOrigin(0, 0.5);
-        this.add.text(
-            96, 256, `restore health >`,
-            { font: "32px Courier, Monospace Bold", fill: "#FBFBAC" })
-            .setOrigin(0, 0.5);
-        this.add.text(
-            +this.game.config.width / 2, +this.game.config.height * 0.66,
-            `Click the\n${this.characterKey}\nto start.`,
-            { font: "32px Courier, Monospace Bold", fill: "#FBFBAC" })
-            .setOrigin(0.5, 0.5);
-        this.add.text(
-            +this.game.config.width / 2, +this.game.config.height * 0.9,
-            `Use LEFT and RIGHT to move.\nUse UP to jump.`,
-            { font: "32px Courier, Monospace Bold", fill: "#FBFBAC" })
-            .setOrigin(0.5, 0.5);
-    }
-
-    addIcons(): void {
-        this.add.image(+this.game.config.width - 128, 64, this.goodCookieKey).setAngle(Phaser.Math.Between(0, 360));
-        this.add.image(+this.game.config.width - 128, 160, this.badCookieKey).setAngle(Phaser.Math.Between(0, 360));
-        this.add.image(+this.game.config.width - 128, 256, "hotdog");
-    }
-
-    addPlayer(): void {
-        this.player = this.physics.add.image(
+    addTutorialImage(): void {
+        this.physics.add.image(
             +this.game.config.width / 2,
-            +this.game.config.height / 2,
-            this.characterKey
-        );
-    
+            32,
+            this.characterKey + "_tutorial"
+        ).setOrigin(0.5, 0);
+    }
 
-        this.player.setInteractive();
-        this.player.on("pointerdown", () => {
-            this.player.setTint(0x00FF00);
-            this.startGame(this.characterKey);
+    addTutorialText(): void {
+        this.add.text(
+            +this.game.config.width / 2, +this.game.config.height * 0.7,
+            `Use LEFT and RIGHT to move.\nUse UP to jump.`,
+            { font: "32px Courier, Monospace Bold", fill: "#FBFBAC", align: "center" })
+            .setOrigin(0.5, 0.5);
+    }
+
+    addStartButton(): void {
+        const startButton = this.add.image(+this.game.config.width / 2, +this.game.config.height - 64, "startButton").setOrigin(0.5, 1);
+        startButton.setInteractive();
+        startButton.on("pointerdown", () => {
+            startButton.setTint(0x00FF00);
+            this.startGame();
         });
-        this.player.on("pointerover", () => {
-            this.player.setTint(0x00FF00);
+        startButton.on("pointerover", () => {
+            startButton.setTint(0x00FF00);
         });
-        this.player.on("pointerout", () => {
-            this.player.setTint(0xFFFFFF);
+        startButton.on("pointerout", () => {
+            startButton.setTint(0xFFFFFF);
         });
     }
 
-    startGame(characterKey: string): void {
-        this.scene.start("SceneGame", { characterKey: characterKey });
+    startGame(): void {
+        this.scene.start("SceneGame", { characterKey: this.characterKey });
     }
 }

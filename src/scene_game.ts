@@ -3,26 +3,25 @@ import { Cookie } from "./cookie";
 import { Hotdog } from "./hotdog";
 
 export class SceneGame extends Phaser.Scene {
-    ground: Phaser.Physics.Arcade.StaticGroup;
-    hud: Phaser.Physics.Arcade.StaticGroup;
-    info: Phaser.GameObjects.Text;
+    characterKey: string;
+    goodCookieKey: string;
+    badCookieKey: string;
     goodCookiesCaught: number;
     badCookiesCaught: number;
     goodCookiesDropped: number;
     maxErrors: number;
-    goodCookieKey: string;
-    badCookieKey: string;
-    cookieSpeed: number;
     lastTimeTick: number;
     emitSpeed: number;
     emitSpeedLimit: number;
     emitSpeedUp: number;
+    info: Phaser.GameObjects.Text;
+    cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+    ground: Phaser.Physics.Arcade.StaticGroup;
+    hud: Phaser.Physics.Arcade.StaticGroup;
     goodCookieGroup: Phaser.Physics.Arcade.Group;
     badCookieGroup: Phaser.Physics.Arcade.Group;
     hotdogGroup: Phaser.Physics.Arcade.Group;
-    characterKey: string;
     player: Phaser.Physics.Arcade.Image;
-    cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     canJump: boolean;
 
     constructor() {
@@ -43,7 +42,6 @@ export class SceneGame extends Phaser.Scene {
         this.emitSpeedLimit = 500;
         this.emitSpeedUp = 20;
         this.lastTimeTick = 0;
-        this.cookieSpeed = 100;
         this.canJump = false;
     }
 
@@ -58,17 +56,29 @@ export class SceneGame extends Phaser.Scene {
     }
 
     create(): void {
-        this.setupGroups();
+        this.setupEmissionGroups();
+        this.addPlayer();
+        this.setupPlayerColliders();
         this.addGround();
+        this.setupGroundColliders();
         this.addHud();
         this.setupHud();
         this.updateHud();
-        this.addPlayer();
-        this.setupGroundColliders();
         this.setupControls();
     }
 
     update(time: number): void {
+        this.manageEmissions(time);
+        this.manageMovement();
+    }
+
+    setupEmissionGroups(): void {
+        this.goodCookieGroup = this.physics.add.group();
+        this.badCookieGroup = this.physics.add.group();
+        this.hotdogGroup = this.physics.add.group();
+    }
+
+    manageEmissions(time): void {
         let deltaTime: number = time - this.lastTimeTick;
         if (deltaTime > this.emitSpeed) {
             this.lastTimeTick = time;
@@ -83,8 +93,57 @@ export class SceneGame extends Phaser.Scene {
                 this.emitHotdot();
             }
         }
+    }
 
-        this.manageMovement();
+    emitCookie(): void {
+        new Cookie(this, this.goodCookieKey, this.badCookieKey);
+    }
+
+    emitHotdot(): void {
+        new Hotdog(this);
+    }
+
+    addPlayer(): void {
+        this.player = this.physics.add.image(
+            +this.game.config.width / 2,
+            +this.game.config.height / 2,
+            this.characterKey
+        );
+
+        this.player.setGravityY(400);
+        this.player.setCollideWorldBounds(true);
+    }
+
+    setupPlayerColliders(): void {
+        this.physics.add.overlap(this.player, this.badCookieGroup, this.onCaughtBadCookie, null, this);
+        this.physics.add.overlap(this.player, this.goodCookieGroup, this.onCaughtGoodCookie, null, this);
+        this.physics.add.overlap(this.player, this.hotdogGroup, this.onCaughtHotdog, null, this);
+    }
+
+    onCaughtBadCookie(player: Phaser.Physics.Arcade.Image, cookie: Cookie) {
+        if (!cookie.enabled) return;
+
+        this.badCookiesCaught++;
+        this.updateHud();
+        cookie.enabled = false;
+        cookie.setTint(0xff0000);
+        cookie.setVelocityY(-200);
+        this.time.delayedCall(100, () => {
+            cookie.destroy();
+        });
+    }
+
+    onCaughtHotdog(player: Phaser.Physics.Arcade.Image, hotdog: Hotdog) {
+        if (!hotdog.enabled) return;
+
+        this.badCookiesCaught--;
+        this.updateHud();
+        hotdog.enabled = false;
+        hotdog.setTint(0x00ff00);
+        hotdog.setVelocityY(-200);
+        this.time.delayedCall(100, () => {
+            hotdog.destroy();
+        });
     }
 
     addGround(): void {
@@ -101,8 +160,8 @@ export class SceneGame extends Phaser.Scene {
     }
 
     setupGroundColliders(): void {
-        this.physics.add.collider(this.ground, this.badCookieGroup, this.onDroppedBadCookie, null, this);
         this.physics.add.collider(this.ground, this.goodCookieGroup, this.onDroppedGoodCookie, null, this);
+        this.physics.add.collider(this.ground, this.badCookieGroup, this.onDroppedBadCookie, null, this);
         this.physics.add.collider(this.ground, this.hotdogGroup, this.onDroppedBadCookie, null, this);
         this.physics.add.collider(this.ground, this.player, this.enableJump, null, this);
     }
@@ -137,39 +196,9 @@ export class SceneGame extends Phaser.Scene {
             cookie.destroy();
         });
     }
-
-    onCaughtBadCookie(player: Phaser.Physics.Arcade.Image, cookie: Cookie) {
-        if (!cookie.enabled) return;
-
-        this.badCookiesCaught++;
-        this.updateHud();
-        cookie.enabled = false;
-        cookie.setTint(0xff0000);
-        cookie.setVelocityY(-200);
-        this.time.delayedCall(100, () => {
-            cookie.destroy();
-        });
-    }
-
-    onCaughtHotdog(player: Phaser.Physics.Arcade.Image, hotdog: Hotdog) {
-        if (!hotdog.enabled) return;
-
-        this.badCookiesCaught--;
-        this.updateHud();
-        hotdog.enabled = false;
-        hotdog.setTint(0x00ff00);
-        hotdog.setVelocityY(-200);
-        this.time.delayedCall(100, () => {
-            hotdog.destroy();
-        });
-    }
     
     enableJump(): void {
         this.canJump = true;
-    }
-
-    setupPlayerColliders(): void {
-
     }
 
     addHud(): void {
@@ -195,37 +224,12 @@ export class SceneGame extends Phaser.Scene {
         this.info.text = `Health: ${health}   Cookies: ${this.goodCookiesCaught}`;
 
         if (health <= 0) {
-            this.scene.start("SceneResults", { characterKey: this.characterKey, goodCookiesCaught: this.goodCookiesCaught });
+            this.showResults();
         }
     }
 
-    setupGroups(): void {
-        this.goodCookieGroup = this.physics.add.group();
-        this.badCookieGroup = this.physics.add.group();
-        this.hotdogGroup = this.physics.add.group();
-    }
-
-    emitCookie(): void {
-        new Cookie(this, this.goodCookieKey, this.badCookieKey);
-    }
-
-    emitHotdot(): void {
-        new Hotdog(this);
-    }
-
-    addPlayer(): void {
-        this.player = this.physics.add.image(
-            +this.game.config.width / 2,
-            +this.game.config.height / 2,
-            this.characterKey
-        );
-
-        this.player.setGravityY(400);
-        this.player.setCollideWorldBounds(true);
-
-        this.physics.add.overlap(this.player, this.badCookieGroup, this.onCaughtBadCookie, null, this);
-        this.physics.add.overlap(this.player, this.goodCookieGroup, this.onCaughtGoodCookie, null, this);
-        this.physics.add.overlap(this.player, this.hotdogGroup, this.onCaughtHotdog, null, this);
+    showResults(): void {
+        this.scene.start("SceneResults", { characterKey: this.characterKey, goodCookieKey: this.goodCookieKey, goodCookiesCaught: this.goodCookiesCaught });
     }
 
     setupControls(): void {
