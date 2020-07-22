@@ -6,8 +6,12 @@ import { SceneResults } from "./scene_results";
 
 const config: Phaser.Types.Core.GameConfig = {
   title: "Pigeon—CookieCatcher",
-  width: 600,
-  height: 800,
+  scale: {
+      mode: Phaser.Scale.FIT,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+      width: 600,
+      height: 800
+  },
   scene: [SceneCharacterSelect, SceneTutorial, SceneGame, SceneResults],
   physics: {
       default: "arcade",

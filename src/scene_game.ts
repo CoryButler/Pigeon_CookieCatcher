@@ -17,12 +17,14 @@ export class SceneGame extends Phaser.Scene {
     info: Phaser.GameObjects.Text;
     cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     ground: Phaser.Physics.Arcade.StaticGroup;
-    hud: Phaser.Physics.Arcade.StaticGroup;
     goodCookieGroup: Phaser.Physics.Arcade.Group;
     badCookieGroup: Phaser.Physics.Arcade.Group;
     hotdogGroup: Phaser.Physics.Arcade.Group;
     player: Phaser.Physics.Arcade.Image;
     canJump: boolean;
+    isOnScreenLeftDown: boolean;
+    isOnScreenRightDown: boolean;
+    isOnScreenUpDown: boolean;
 
     constructor() {
         super({
@@ -43,9 +45,18 @@ export class SceneGame extends Phaser.Scene {
         this.emitSpeedUp = 20;
         this.lastTimeTick = 0;
         this.canJump = false;
+        this.isOnScreenLeftDown = false;
+        this.isOnScreenRightDown = false;
+        this.isOnScreenUpDown = false;
     }
 
     preload(): void {
+        this.load.image("btnLeftUp", "assets/btnLeftUp.png");
+        this.load.image("btnRightUp", "assets/btnRightUp.png");
+        this.load.image("btnUpUp", "assets/btnUpUp.png");
+        this.load.image("btnLeftDown", "assets/btnLeftDown.png");
+        this.load.image("btnRightDown", "assets/btnRightDown.png");
+        this.load.image("btnUpDown", "assets/btnUpDown.png");
         this.load.image("hud", "assets/hud.png");
         this.load.image("ground", "assets/ground.png");
         this.load.image("cookie", "assets/cookie.png");
@@ -64,7 +75,8 @@ export class SceneGame extends Phaser.Scene {
         this.addHud();
         this.setupHud();
         this.updateHud();
-        this.setupControls();
+        this.setupKeyboardControls();
+        this.setupOnScreenControls();
     }
 
     update(time: number): void {
@@ -110,7 +122,7 @@ export class SceneGame extends Phaser.Scene {
             this.characterKey
         );
 
-        this.player.setGravityY(400);
+        this.player.setGravityY(1600);
         this.player.setCollideWorldBounds(true);
     }
 
@@ -149,14 +161,9 @@ export class SceneGame extends Phaser.Scene {
     addGround(): void {
         this.ground = this.physics.add.staticGroup({
             key: "ground",
-            frameQuantity: 10
+            repeat: 9,
+            setXY: { x: 32, y: +this.game.config.height - 53, stepX: 64 }
         });
-
-        Phaser.Actions.PlaceOnLine(
-            this.ground.getChildren(), 
-            new Phaser.Geom.Line(32, 768, 632, 768));
-
-        this.ground.refresh();
     }
 
     setupGroundColliders(): void {
@@ -202,16 +209,11 @@ export class SceneGame extends Phaser.Scene {
     }
 
     addHud(): void {
-        this.hud = this.physics.add.staticGroup({
+        this.physics.add.staticGroup({
             key: "hud",
-            frameQuantity: 10
+            repeat: 9,
+            setXY: { x: 32, y: 32, stepX: 64 }
         });
-
-        Phaser.Actions.PlaceOnLine(
-            this.hud.getChildren(), 
-            new Phaser.Geom.Line(32, 32, 632, 32));
-
-        this.hud.refresh();
     }
 
     setupHud(): void {
@@ -232,16 +234,63 @@ export class SceneGame extends Phaser.Scene {
         this.scene.start("SceneResults", { characterKey: this.characterKey, goodCookieKey: this.goodCookieKey, goodCookiesCaught: this.goodCookiesCaught });
     }
 
-    setupControls(): void {
+    setupKeyboardControls(): void {
         this.cursors = this.input.keyboard.createCursorKeys();
     }
 
+    setupOnScreenControls(): void {
+        const left = this.add.image(50, +this.game.config.height - 50, "btnLeftUp");
+        left.setInteractive();
+        left.on("pointerdown", () => {
+            left.setTexture("btnLeftDown");
+            this.isOnScreenLeftDown = true;
+        });
+        left.on("pointerup", () => {
+            left.setTexture("btnLeftUp");
+            this.isOnScreenLeftDown = false;
+        });
+        left.on("pointerout", () => {
+            left.setTexture("btnLeftUp");
+            this.isOnScreenLeftDown = false;
+        });
+        
+        const right = this.add.image(140, +this.game.config.height - 50, "btnRightUp");
+        right.setInteractive();
+        right.on("pointerdown", () => {
+            right.setTexture("btnRightDown");
+            this.isOnScreenRightDown = true;
+        });
+        right.on("pointerup", () => {
+            right.setTexture("btnRightUp");
+            this.isOnScreenRightDown = false;
+        });
+        right.on("pointerout", () => {
+            right.setTexture("btnRightUp");
+            this.isOnScreenRightDown = false;
+        });
+        
+        const up = this.add.image(+this.game.config.width - 50, +this.game.config.height - 50, "btnUpUp");
+        up.setInteractive();
+        up.on("pointerdown", () => {
+            up.setTexture("btnUpDown");
+            this.isOnScreenUpDown = true;
+        });
+        up.on("pointerup", () => {
+            up.setTexture("btnUpUp");
+            this.isOnScreenUpDown = false;
+        });
+        up.on("pointerout", () => {
+            up.setTexture("btnUpUp");
+            this.isOnScreenUpDown = false;
+        });
+    }
+
     manageMovement(): void {
-        if (this.cursors.left.isDown) {
+        if (this.cursors.left.isDown || this.isOnScreenLeftDown) {
             this.player.setVelocityX(-200);
             this.player.setFlipX(false);
         }
-        else if (this.cursors.right.isDown) {
+        else if (this.cursors.right.isDown || this.isOnScreenRightDown) {
             this.player.setVelocityX(200);
             this.player.setFlipX(true);
         }
@@ -249,9 +298,9 @@ export class SceneGame extends Phaser.Scene {
             this.player.setVelocityX(0);
         }
 
-        if (this.cursors.up.isDown && this.canJump) {
+        if ((this.cursors.up.isDown || this.isOnScreenUpDown) && this.canJump) {
             this.canJump = false;
-            this.player.setVelocityY(-400);
+            this.player.setVelocityY(-800);
         }
     }
 }
