@@ -70,6 +70,8 @@ export class SceneResults extends Phaser.Scene {
         restartButton.setInteractive();
         restartButton.on("pointerdown", () => {
             restartButton.setTint(0x00FF00);
+        });
+        restartButton.on("pointerup", () => {
             this.restartGame();
         });
         restartButton.on("pointerover", () => {

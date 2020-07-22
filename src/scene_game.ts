@@ -76,7 +76,9 @@ export class SceneGame extends Phaser.Scene {
         this.setupHud();
         this.updateHud();
         this.setupKeyboardControls();
-        this.setupOnScreenControls();
+        if (!this.game.device.os.desktop) {
+            this.setupOnScreenControls();
+        }
     }
 
     update(time: number): void {
@@ -239,49 +241,40 @@ export class SceneGame extends Phaser.Scene {
     }
 
     setupOnScreenControls(): void {
-        const left = this.add.image(50, +this.game.config.height - 50, "btnLeftUp");
-        left.setInteractive();
-        left.on("pointerdown", () => {
-            left.setTexture("btnLeftDown");
-            this.isOnScreenLeftDown = true;
+        this.input.addPointer(1);
+
+        const left = this.add.image(50, +this.game.config.height - 50, "btnLeftUp").setName("left").setInteractive();
+        const right = this.add.image(140, +this.game.config.height - 50, "btnRightUp").setName("right").setInteractive();
+        const up = this.add.image(+this.game.config.width - 50, +this.game.config.height - 50, "btnUpUp").setName("up").setInteractive();
+
+        this.input.on("gameobjectover", (pointer, gameObject) => {
+            if(gameObject.name === "left") {
+                this.isOnScreenLeftDown = true;
+                left.setTexture("btnLeftDown");
+            }
+            if(gameObject.name === "right") {
+                this.isOnScreenRightDown = true;
+                right.setTexture("btnRightDown");
+            }
+            if(gameObject.name === "up") {
+                this.isOnScreenUpDown = true;
+                up.setTexture("btnUpDown");
+            }
         });
-        left.on("pointerup", () => {
-            left.setTexture("btnLeftUp");
-            this.isOnScreenLeftDown = false;
-        });
-        left.on("pointerout", () => {
-            left.setTexture("btnLeftUp");
-            this.isOnScreenLeftDown = false;
-        });
-        
-        const right = this.add.image(140, +this.game.config.height - 50, "btnRightUp");
-        right.setInteractive();
-        right.on("pointerdown", () => {
-            right.setTexture("btnRightDown");
-            this.isOnScreenRightDown = true;
-        });
-        right.on("pointerup", () => {
-            right.setTexture("btnRightUp");
-            this.isOnScreenRightDown = false;
-        });
-        right.on("pointerout", () => {
-            right.setTexture("btnRightUp");
-            this.isOnScreenRightDown = false;
-        });
-        
-        const up = this.add.image(+this.game.config.width - 50, +this.game.config.height - 50, "btnUpUp");
-        up.setInteractive();
-        up.on("pointerdown", () => {
-            up.setTexture("btnUpDown");
-            this.isOnScreenUpDown = true;
-        });
-        up.on("pointerup", () => {
-            up.setTexture("btnUpUp");
-            this.isOnScreenUpDown = false;
-        });
-        up.on("pointerout", () => {
-            up.setTexture("btnUpUp");
-            this.isOnScreenUpDown = false;
+
+        this.input.on("gameobjectout", (pointer, gameObject) => {
+            if(gameObject.name === "left") {
+                this.isOnScreenLeftDown = false;
+                left.setTexture("btnLeftUp");
+            }
+            if(gameObject.name === "right") {
+                this.isOnScreenRightDown = false;
+                right.setTexture("btnRightUp");
+            }
+            if(gameObject.name === "up") {
+                this.isOnScreenUpDown = false;
+                up.setTexture("btnUpUp");
+            }
         });
     }
 

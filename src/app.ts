@@ -6,6 +6,7 @@ import { SceneResults } from "./scene_results";
 
 const config: Phaser.Types.Core.GameConfig = {
   title: "Pigeon—CookieCatcher",
+  type: Phaser.AUTO,
   scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,

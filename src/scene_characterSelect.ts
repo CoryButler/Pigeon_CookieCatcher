@@ -61,6 +61,8 @@ export class SceneCharacterSelect extends Phaser.Scene {
         character.setInteractive();
         character.on("pointerdown", () => {
             character.setTint(0x00FF00);
+        });
+        character.on("pointerup", () => {
             this.showTutorial(key);
         });
         character.on("pointerover", () => {

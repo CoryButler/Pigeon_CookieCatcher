@@ -46,6 +46,8 @@ export class SceneTutorial extends Phaser.Scene {
         startButton.setInteractive();
         startButton.on("pointerdown", () => {
             startButton.setTint(0x00FF00);
+        });
+        startButton.on("pointerup", () => {
             this.startGame();
         });
         startButton.on("pointerover", () => {
