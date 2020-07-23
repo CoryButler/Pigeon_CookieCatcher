@@ -76,7 +76,7 @@ export class SceneGame extends Phaser.Scene {
         this.setupHud();
         this.updateHud();
         this.setupKeyboardControls();
-        if (!this.game.device.os.desktop || this.game.device.os.iOS || this.game.device.os.android) {
+        if (!this.game.device.os.desktop || this.game.device.os.iOS || this.game.device.os.iPad || this.game.device.os.android) {
             this.setupOnScreenControls();
         }
     }
