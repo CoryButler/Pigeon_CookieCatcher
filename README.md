@@ -1,2 +1,2 @@
 # Pigeon_CookieCatcher
- Phaser game
+This is a game starring my kids' favorite storybook characters.  It is build using the Phaser game engine.
